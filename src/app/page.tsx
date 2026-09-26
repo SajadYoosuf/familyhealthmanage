@@ -48,16 +48,23 @@ export default function AuthPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      setError(error.message);
+
+    // Use server-side signup to bypass email confirmation
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      setError(data.error || 'Signup failed');
       setLoading(false);
       return;
     }
-    if (data.user) {
-      setUserId(data.user.id);
-      setStep('profile');
-    }
+
+    setUserId(data.userId);
+    setStep('profile');
     setLoading(false);
   }
 
