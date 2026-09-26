@@ -18,15 +18,11 @@ const CATEGORIES = [
   'Other',
 ];
 
-type Member = { id: string; name: string; relation: string };
-
 export default function UploadPage() {
   const router = useRouter();
   const supabase = createClient();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [members, setMembers] = useState<Member[]>([]);
-  const [memberId, setMemberId] = useState('');
   const [category, setCategory] = useState('');
   const [reportDate, setReportDate] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -36,26 +32,9 @@ export default function UploadPage() {
   const [result, setResult] = useState<{ extracted: number } | null>(null);
 
   useEffect(() => {
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push('/'); return; }
-
-      const { data: member } = await supabase
-        .from('family_members')
-        .select('family_id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!member) { router.push('/'); return; }
-
-      const { data: allMembers } = await supabase
-        .from('family_members')
-        .select('id, name, relation')
-        .eq('family_id', member.family_id);
-
-      setMembers(allMembers || []);
-    }
-    load();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) router.push('/');
+    });
   }, [supabase, router]);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -71,8 +50,8 @@ export default function UploadPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!file || !memberId || !category) {
-      setError('Please fill all required fields and select a file');
+    if (!file || !category) {
+      setError('Please select a file and category');
       return;
     }
 
@@ -81,7 +60,6 @@ export default function UploadPage() {
 
     const form = new FormData();
     form.append('file', file);
-    form.append('member_id', memberId);
     form.append('category', category);
     if (reportDate) form.append('report_date', reportDate);
 
@@ -171,20 +149,6 @@ export default function UploadPage() {
             <button type="button" onClick={() => { setFile(null); setPreview(null); }}
               className="text-xs text-gray-400 mt-1 underline">Remove</button>
           )}
-        </div>
-
-        {/* Member */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Report is for *</label>
-          <div className="grid grid-cols-2 gap-2">
-            {members.map(m => (
-              <button key={m.id} type="button" onClick={() => setMemberId(m.id)}
-                className={`py-2.5 px-3 rounded-xl text-sm font-medium border-2 transition text-left ${memberId === m.id ? 'border-brand-700 bg-brand-50 text-brand-700' : 'border-gray-200 text-gray-600 bg-white hover:border-brand-300'}`}>
-                <span className="block font-semibold">{m.name}</span>
-                <span className="text-xs capitalize opacity-70">{m.relation}</span>
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Category */}

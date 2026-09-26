@@ -23,12 +23,14 @@ export async function POST(req: NextRequest) {
 
   const formData = await req.formData();
   const file = formData.get('file') as File;
-  const memberId = formData.get('member_id') as string;
   const category = formData.get('category') as string;
   const reportDate = formData.get('report_date') as string;
 
-  if (!file || !memberId || !category) {
-    return NextResponse.json({ error: 'file, member_id and category are required' }, { status: 400 });
+  // Auto-assign to the logged-in user's member record
+  const memberId = uploader.id;
+
+  if (!file || !category) {
+    return NextResponse.json({ error: 'file and category are required' }, { status: 400 });
   }
 
   const bytes = await file.arrayBuffer();
