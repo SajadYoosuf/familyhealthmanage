@@ -41,21 +41,29 @@ ALTER TABLE families ENABLE ROW LEVEL SECURITY;
 ALTER TABLE family_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE health_records ENABLE ROW LEVEL SECURITY;
 
--- Only see your own family
+-- Security definer function avoids infinite recursion in RLS policies
+-- (querying family_members inside family_members policy causes a loop)
+CREATE OR REPLACE FUNCTION public.get_my_family_id()
+RETURNS UUID
+LANGUAGE SQL
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT family_id FROM public.family_members
+  WHERE user_id = auth.uid()
+  LIMIT 1;
+$$;
+
+-- Policies use the function instead of a self-referencing subquery
 CREATE POLICY "family_access" ON families
-  FOR ALL USING (
-    id IN (SELECT family_id FROM family_members WHERE user_id = auth.uid())
-  );
+  FOR ALL USING (id = get_my_family_id());
 
 CREATE POLICY "member_access" ON family_members
-  FOR ALL USING (
-    family_id IN (SELECT family_id FROM family_members WHERE user_id = auth.uid())
-  );
+  FOR ALL USING (family_id = get_my_family_id());
 
 CREATE POLICY "records_access" ON health_records
-  FOR ALL USING (
-    family_id IN (SELECT family_id FROM family_members WHERE user_id = auth.uid())
-  );
+  FOR ALL USING (family_id = get_my_family_id());
 
 -- Storage bucket (run after creating the bucket named "health-files" in Supabase dashboard)
 -- Allow family members to upload/read files in their family folder
