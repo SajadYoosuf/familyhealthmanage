@@ -210,7 +210,7 @@ export default function DashboardPage() {
         )}
       </div>
 
-      </div>{/* end main column */}
+      </div>
 
       <DocumentSidebar
         records={records}
@@ -219,7 +219,7 @@ export default function DashboardPage() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      </div>{/* end flex row */}
+      </div>
 
       {/* Upload FAB */}
       <div className="fixed bottom-6 right-4 lg:right-[calc(18rem+1rem)]">
