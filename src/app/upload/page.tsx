@@ -134,7 +134,7 @@ export default function UploadPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                 <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
                   <span className="text-white text-xs font-semibold bg-black/40 backdrop-blur px-2.5 py-1 rounded-lg">
-                    {file.name}
+                    {file?.name}
                   </span>
                   <span className="text-white text-xs bg-brand-600/80 backdrop-blur px-2.5 py-1 rounded-lg font-semibold">
                     Ready
