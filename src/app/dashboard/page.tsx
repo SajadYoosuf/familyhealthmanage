@@ -210,8 +210,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      </div>
-
       <DocumentSidebar
         records={records}
         members={members}
