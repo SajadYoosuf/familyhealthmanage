@@ -299,13 +299,16 @@ export default function DashboardPage() {
   const [filters, setFilters] = useState({ month: '', member_id: '', category: '' });
 
   const loadFamilyInfo = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push('/'); return; }
+    // Use getSession() (reads from cookie cache) instead of getUser() (network round-trip)
+    // The middleware already verified the JWT server-side, so this is safe and reliable on mobile
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { router.push('/'); return; }
+    const userId = session.user.id;
 
     const { data: member } = await supabase
       .from('family_members')
       .select('name, family_id, families(name, invite_code)')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
 
     if (!member) { router.push('/'); return; }
