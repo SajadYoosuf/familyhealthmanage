@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { extractTextFromPdf, extractTextFromImage, extractMedicalValues } from '@/lib/extract';
+import { extractTextFromPdf, extractTextFromImage, extractMedicalValues, detectCategory } from '@/lib/extract';
 
 export async function POST(req: NextRequest) {
   const supabase = createClient();
@@ -23,14 +23,11 @@ export async function POST(req: NextRequest) {
 
   const formData = await req.formData();
   const file = formData.get('file') as File;
-  const category = formData.get('category') as string;
   const reportDate = formData.get('report_date') as string;
-
-  // Auto-assign to the logged-in user's member record
   const memberId = uploader.id;
 
-  if (!file || !category) {
-    return NextResponse.json({ error: 'file and category are required' }, { status: 400 });
+  if (!file) {
+    return NextResponse.json({ error: 'file is required' }, { status: 400 });
   }
 
   const bytes = await file.arrayBuffer();
@@ -60,6 +57,9 @@ export async function POST(req: NextRequest) {
     console.error('Extraction error:', err);
     rawText = '';
   }
+
+  // Auto-detect category from report text
+  const category = rawText ? detectCategory(rawText) : 'Other';
 
   // Extract medical values
   const extraction = rawText ? extractMedicalValues(rawText) : { quantitative: [], qualitative: [] };

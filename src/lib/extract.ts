@@ -178,6 +178,45 @@ export function extractMedicalValues(text: string): ExtractionResult {
   return { quantitative, qualitative };
 }
 
+export function detectCategory(text: string): string {
+  const t = text.toLowerCase();
+
+  if (/hemoglobin|haemoglobin|\bwbc\b|\brbc\b|\bplatelets?\b|pcv|hematocrit|leucocyte|lymphocyte|neutrophil|complete\s+blood\s+count|\bcbc\b/.test(t))
+    return 'Complete Blood Count (CBC)';
+
+  if (/bilirubin|sgpt|sgot|\balt\b|\bast\b|alkaline\s+phosphatase|\balp\b|liver\s+function/.test(t))
+    return 'Liver Function Test (LFT)';
+
+  if (/creatinine|blood\s+urea|uric\s+acid|renal\s+function|kidney\s+function|\brft\b|\bkft\b/.test(t))
+    return 'Renal Function Test (RFT)';
+
+  if (/hbsag|hepatitis|anti.hcv|\bhiv\b|\bvdrl\b|viral\s+marker/.test(t))
+    return 'Viral Markers';
+
+  if (/blood\s+group|abo\s+group|rh\s+factor|blood\s+type/.test(t))
+    return 'Blood Group';
+
+  if (/cholesterol|triglyceride|\bhdl\b|\bldl\b|lipid\s+profile/.test(t))
+    return 'Cholesterol / Lipid Profile';
+
+  if (/blood\s+sugar|glucose|\bhba1c\b|fasting\s+sugar|random\s+blood\s+sugar|diabet/.test(t))
+    return 'Blood Sugar / Diabetes';
+
+  if (/\btsh\b|thyroid|thyroxine/.test(t))
+    return 'Thyroid (TSH/T3/T4)';
+
+  if (/vitamin\s*d|vitamin\s*b\s*12|\bb12\b|folate/.test(t))
+    return 'Vitamin Profile';
+
+  if (/x.ray|x ray|radiograph|ultrasound|scan|mri|ct\s+scan/.test(t))
+    return 'X-Ray / Scan Report';
+
+  if (/tablet|capsule|syrup|prescribed|dosage|mg\s+\d+\s+times/.test(t))
+    return 'Prescription';
+
+  return 'Other';
+}
+
 export async function extractTextFromPdf(buffer: Buffer): Promise<string> {
   const pdfParse = (await import('pdf-parse/lib/pdf-parse.js')).default;
   const data = await pdfParse(buffer);

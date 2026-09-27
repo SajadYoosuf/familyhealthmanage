@@ -4,28 +4,11 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
-const CATEGORIES = [
-  'Complete Blood Count (CBC)',
-  'Blood Sugar / Diabetes',
-  'Liver Function Test (LFT)',
-  'Renal Function Test (RFT)',
-  'Blood Group',
-  'Viral Markers',
-  'Cholesterol / Lipid Profile',
-  'Blood Pressure',
-  'Thyroid (TSH/T3/T4)',
-  'Vitamin Profile',
-  'Prescription',
-  'X-Ray / Scan Report',
-  'Other',
-];
-
 export default function UploadPage() {
   const router = useRouter();
   const supabase = createClient();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [category, setCategory] = useState('');
   const [reportDate, setReportDate] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -52,8 +35,8 @@ export default function UploadPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!file || !category) {
-      setError('Please select a file and category');
+    if (!file) {
+      setError('Please select a file');
       return;
     }
 
@@ -62,7 +45,6 @@ export default function UploadPage() {
 
     const form = new FormData();
     form.append('file', file);
-    form.append('category', category);
     if (reportDate) form.append('report_date', reportDate);
 
     const res = await fetch('/api/upload', { method: 'POST', body: form });
@@ -151,16 +133,6 @@ export default function UploadPage() {
             <button type="button" onClick={() => { setFile(null); setPreview(null); }}
               className="text-xs text-gray-400 mt-1 underline">Remove</button>
           )}
-        </div>
-
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Category *</label>
-          <select value={category} onChange={e => setCategory(e.target.value)} required
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white">
-            <option value="">Select report type</option>
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
         </div>
 
         {/* Date */}
