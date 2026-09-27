@@ -294,7 +294,10 @@ export async function extractTextFromPdf(buffer: Buffer): Promise<string> {
 
 export async function extractTextFromImage(buffer: Buffer): Promise<string> {
   const { createWorker } = await import('tesseract.js');
-  const worker = await createWorker('eng');
+  const worker = await createWorker('eng', 1, {
+    langPath: process.cwd(),
+    cacheMethod: 'none',
+  });
   try {
     const { data: { text } } = await worker.recognize(buffer);
     return text;

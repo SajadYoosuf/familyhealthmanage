@@ -54,8 +54,9 @@ export async function POST(req: NextRequest) {
     rawText = isPdf
       ? await extractTextFromPdf(buffer)
       : await extractTextFromImage(buffer);
+    console.log(`[upload] OCR complete. file=${file.name} type=${file.type} chars=${rawText.length}`);
   } catch (err) {
-    console.error('Extraction error:', err);
+    console.error('[upload] Extraction error:', err);
     rawText = '';
   }
 
