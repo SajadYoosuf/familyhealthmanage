@@ -8,7 +8,7 @@ type StructuredData = {
   qualitative?: QualitativeValue[];
 } | MedicalValue[];
 
-type Record = {
+type HealthRecord = {
   id: string;
   category: string;
   report_date: string | null;
@@ -58,7 +58,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   'Blood Group': '🩸',
 };
 
-export function RecordCard({ record }: { record: Record }) {
+export function RecordCard({ record }: { record: HealthRecord }) {
   const [expanded, setExpanded] = useState(false);
 
   const dateStr = record.report_date
