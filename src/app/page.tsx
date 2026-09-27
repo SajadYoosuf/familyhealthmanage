@@ -38,11 +38,10 @@ export default function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setError(error.message);
+      setLoading(false);
     } else {
-      router.push('/dashboard');
-      router.refresh();
+      window.location.href = '/dashboard';
     }
-    setLoading(false);
   }
 
   async function handleSignup(e: React.FormEvent) {
@@ -57,6 +56,14 @@ export default function AuthPage() {
     const data = await res.json();
     if (!res.ok) {
       setError(data.error || 'Signup failed');
+      setLoading(false);
+      return;
+    }
+    // Sign in client-side so the session is stored in browser cookies
+    // (server-side sign-in in /api/auth/signup doesn't reach the browser)
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    if (signInError) {
+      setError(signInError.message);
       setLoading(false);
       return;
     }
@@ -79,9 +86,7 @@ export default function AuthPage() {
       setLoading(false);
       return;
     }
-    router.push('/dashboard');
-    router.refresh();
-    setLoading(false);
+    window.location.href = '/dashboard';
   }
 
   const inputClass = "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition";
