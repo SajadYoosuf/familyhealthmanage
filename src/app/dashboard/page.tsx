@@ -28,15 +28,17 @@ function getLatestValue(records: any[], testNames: string[]) {
   return null;
 }
 
-// ─── Nav item ────────────────────────────────────────────────────────────────
+// ─── Sidebar nav item ─────────────────────────────────────────────────────────
 
 function NavItem({ icon, label, active, onClick }: {
   icon: React.ReactNode; label: string; active: boolean; onClick: () => void;
 }) {
   return (
     <button onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-        active ? 'bg-brand-700 text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+        active
+          ? 'bg-brand-600 text-white shadow-sm'
+          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
       }`}>
       {icon}
       {label}
@@ -44,15 +46,7 @@ function NavItem({ icon, label, active, onClick }: {
   );
 }
 
-// ─── Documents view ───────────────────────────────────────────────────────────
-
-const DOC_CATEGORIES = [
-  'Complete Blood Count (CBC)', 'Blood Sugar / Diabetes',
-  'Liver Function Test (LFT)', 'Renal Function Test (RFT)',
-  'Blood Group', 'Viral Markers', 'Cholesterol / Lipid Profile',
-  'Thyroid (TSH/T3/T4)', 'Vitamin Profile', 'X-Ray / Scan Report',
-  'Prescription', 'Other',
-];
+// ─── File download ─────────────────────────────────────────────────────────────
 
 async function downloadFile(url: string, filename: string) {
   try {
@@ -71,56 +65,56 @@ async function downloadFile(url: string, filename: string) {
   }
 }
 
+// ─── Full-screen file viewer ──────────────────────────────────────────────────
+
 function FileViewer({ record, onClose }: { record: DocRecord; onClose: () => void }) {
   const label = `${record.category} — ${record.member?.name ?? ''}`;
   const ext = record.file_type === 'pdf' ? 'pdf' : 'jpg';
   const filename = `${label}.${ext}`.replace(/[^a-z0-9.\-_ ]/gi, '_');
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-black/80 flex-shrink-0">
+    <div className="fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur">
+      <div className="flex items-center justify-between px-4 py-3 bg-black/60 flex-shrink-0 border-b border-white/10">
         <div className="min-w-0">
           <p className="text-white font-semibold text-sm truncate">{record.category}</p>
-          <p className="text-gray-400 text-xs">{record.member?.name ?? '—'}</p>
+          <p className="text-gray-400 text-xs mt-0.5">{record.member?.name ?? '—'}</p>
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-          <button
-            onClick={() => downloadFile(record.file_url!, filename)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition">
+        <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+          <button onClick={() => downloadFile(record.file_url!, filename)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             Download
           </button>
           <button onClick={onClose}
-            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition">
+            className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
       </div>
-
-      {/* Viewer */}
-      <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+      <div className="flex-1 min-h-0 flex items-center justify-center p-4">
         {record.file_type === 'pdf' ? (
-          <iframe
-            src={record.file_url!}
-            className="w-full h-full"
-            title={record.category}
-          />
+          <iframe src={record.file_url!} className="w-full h-full rounded-xl" title={record.category} />
         ) : (
-          <img
-            src={record.file_url!}
-            alt={record.category}
-            className="max-w-full max-h-full object-contain"
-          />
+          <img src={record.file_url!} alt={record.category} className="max-w-full max-h-full object-contain rounded-xl" />
         )}
       </div>
     </div>
   );
 }
+
+// ─── Documents view ───────────────────────────────────────────────────────────
+
+const DOC_CATEGORIES = [
+  'Complete Blood Count (CBC)', 'Blood Sugar / Diabetes',
+  'Liver Function Test (LFT)', 'Renal Function Test (RFT)',
+  'Blood Group', 'Viral Markers', 'Cholesterol / Lipid Profile',
+  'Thyroid (TSH/T3/T4)', 'Vitamin Profile', 'X-Ray / Scan Report',
+  'Prescription', 'Other',
+];
 
 function DocumentsView({ records, members }: { records: DocRecord[]; members: Member[] }) {
   const [memberId, setMemberId] = useState('');
@@ -151,60 +145,64 @@ function DocumentsView({ records, members }: { records: DocRecord[]; members: Me
   return (
     <>
       {viewing && <FileViewer record={viewing} onClose={() => setViewing(null)} />}
-
-      <div className="px-4 lg:px-6 py-4 space-y-4 pb-24 lg:pb-6">
+      <div className="px-4 lg:px-6 py-5 space-y-4 pb-24 lg:pb-8">
         {/* Filters */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           <input type="month" value={month} onChange={e => setMonth(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white" />
+            className={`border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white transition ${month ? 'border-brand-400 text-brand-700 bg-brand-50' : 'border-gray-200 text-gray-700'}`} />
           <select value={memberId} onChange={e => setMemberId(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white">
+            className={`border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white transition ${memberId ? 'border-brand-400 text-brand-700 bg-brand-50' : 'border-gray-200 text-gray-700'}`}>
             <option value="">All members</option>
             {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
           </select>
           <select value={category} onChange={e => setCategory(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white">
+            className={`border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white transition ${category ? 'border-brand-400 text-brand-700 bg-brand-50' : 'border-gray-200 text-gray-700'}`}>
             <option value="">All categories</option>
             {DOC_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           {(month || memberId || category) && (
             <button onClick={() => { setMonth(''); setMemberId(''); setCategory(''); }}
-              className="text-sm text-gray-500 border border-gray-200 rounded-xl px-3 py-2 bg-white hover:border-gray-300">
+              className="flex items-center gap-1.5 text-xs font-semibold text-red-500 border border-red-200 bg-red-50 rounded-xl px-3 py-2 hover:bg-red-100 transition">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
               Clear
             </button>
           )}
-          <span className="self-center text-xs text-gray-400 ml-auto">
+          <span className="ml-auto text-xs text-gray-400 font-medium">
             {filtered.length} file{filtered.length !== 1 ? 's' : ''}
           </span>
         </div>
 
         {/* Grid */}
         {filtered.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-5xl mb-3">📂</div>
-            <p className="text-gray-400 text-sm">No documents found</p>
+          <div className="text-center py-20">
+            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <p className="text-gray-500 text-sm font-semibold">No documents found</p>
+            <p className="text-gray-400 text-xs mt-1">Upload a report to see it here</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {filtered.map(r => (
-              <div key={r.id}
-                onClick={() => setViewing(r)}
-                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-brand-200 transition group">
-                {/* Preview */}
+              <div key={r.id} onClick={() => setViewing(r)}
+                className="bg-white rounded-2xl overflow-hidden shadow-card border border-gray-100 cursor-pointer hover:shadow-card-md hover:border-brand-200 transition-all group">
                 {r.file_type !== 'pdf' ? (
                   <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
                     <img src={r.file_url!} alt={r.category}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   </div>
                 ) : (
-                  <div className="aspect-[4/3] bg-red-50 flex flex-col items-center justify-center border-b border-red-100">
-                    <span className="text-4xl font-black text-red-200 leading-none">PDF</span>
-                    <span className="text-xs text-red-400 mt-1 px-2 text-center truncate w-full px-3">{r.category}</span>
+                  <div className="aspect-[4/3] bg-gradient-to-br from-red-50 to-orange-50 flex flex-col items-center justify-center border-b border-red-100/50">
+                    <span className="text-3xl font-black text-red-200">PDF</span>
                   </div>
                 )}
-                {/* Meta */}
                 <div className="p-2.5">
-                  <p className="text-xs font-semibold text-gray-800 truncate leading-tight">{r.category}</p>
+                  <p className="text-xs font-bold text-gray-800 truncate leading-tight">{r.category}</p>
                   <p className="text-xs text-gray-400 mt-0.5 truncate">{r.member?.name ?? '—'} · {fmt(r)}</p>
                 </div>
               </div>
@@ -216,7 +214,7 @@ function DocumentsView({ records, members }: { records: DocRecord[]; members: Me
   );
 }
 
-// ─── Main dashboard page ──────────────────────────────────────────────────────
+// ─── Main dashboard ───────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -299,14 +297,20 @@ export default function DashboardPage() {
     router.refresh();
   }
 
+  const extractedCount = records.filter(r => {
+    const sd = r.structured_data;
+    return Array.isArray(sd) ? sd.length > 0 : (sd?.quantitative?.length > 0 || sd?.qualitative?.length > 0);
+  }).length;
+
+  // Nav icons
   const dashIcon = (
-    <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
     </svg>
   );
   const docsIcon = (
-    <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
@@ -315,75 +319,98 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 lg:flex">
 
-      {/* ── Left sidebar (desktop) ── */}
-      <aside className="hidden lg:flex flex-col w-56 bg-white border-r border-gray-100 min-h-screen sticky top-0 flex-shrink-0">
+      {/* ── Sidebar (desktop) ─────────────────────────────────────────────────── */}
+      <aside className="hidden lg:flex flex-col w-60 bg-white border-r border-gray-100 min-h-screen sticky top-0 flex-shrink-0">
+        {/* Brand */}
         <div className="px-5 py-5 border-b border-gray-100">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-0.5">Family Health</p>
-          <p className="font-bold text-gray-800 truncate">{familyName || '—'}</p>
-          <p className="text-xs text-gray-400 mt-0.5 truncate">{myName}</p>
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-8 h-8 rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-gray-900 text-sm truncate">{familyName || 'Family Health'}</p>
+              <p className="text-xs text-gray-400 truncate">{myName}</p>
+            </div>
+          </div>
         </div>
 
+        {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1">
           <NavItem icon={dashIcon} label="Dashboard" active={view === 'dashboard'} onClick={() => setView('dashboard')} />
           <NavItem icon={docsIcon} label="Documents" active={view === 'documents'} onClick={() => setView('documents')} />
         </nav>
 
+        {/* Bottom actions */}
         <div className="px-3 py-4 border-t border-gray-100 space-y-1">
+          <button onClick={() => router.push('/upload')}
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-brand-50 text-brand-700 hover:bg-brand-100 transition">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            Upload Report
+          </button>
           <button onClick={() => router.push('/add-member')}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors">
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
             Add Member
           </button>
           <button onClick={() => setShowInvite(!showInvite)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors">
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
             Invite Code
           </button>
           <button onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors">
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-red-50 hover:text-red-600 transition">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            Logout
+            Sign out
           </button>
         </div>
 
         {showInvite && (
-          <div className="mx-3 mb-3 bg-brand-50 rounded-xl p-3 text-sm border border-brand-100">
-            <p className="text-brand-600 text-xs mb-1">Invite code</p>
-            <p className="font-mono font-bold tracking-widest text-brand-800">{inviteCode}</p>
+          <div className="mx-3 mb-3 bg-brand-50 rounded-xl p-3 border border-brand-100">
+            <p className="text-brand-600 text-[10px] font-bold uppercase tracking-wider mb-1">Invite Code</p>
+            <p className="font-mono font-bold tracking-widest text-brand-800 text-base">{inviteCode}</p>
             <button onClick={() => navigator.clipboard?.writeText(inviteCode)}
-              className="text-brand-500 text-xs mt-1 underline">Copy</button>
+              className="text-brand-500 text-xs mt-1.5 font-semibold hover:text-brand-700">
+              Copy to clipboard
+            </button>
           </div>
         )}
       </aside>
 
-      {/* ── Main content area ── */}
+      {/* ── Main content ──────────────────────────────────────────────────────── */}
       <div className="flex-1 min-w-0 flex flex-col">
 
         {/* Mobile header */}
-        <div className="lg:hidden bg-brand-700 text-white px-4 pt-10 pb-4">
+        <div className="lg:hidden bg-white border-b border-gray-100 px-4 pt-12 pb-4 sticky top-0 z-30">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-brand-200 text-xs">Welcome, {myName}</p>
-              <h1 className="text-lg font-bold">{familyName || 'Family Health'}</h1>
+              <p className="text-xs text-gray-400 font-medium">{familyName || 'Family Health'}</p>
+              <h1 className="text-lg font-bold text-gray-900">Hey, {myName || '—'}</h1>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={() => router.push('/add-member')} className="text-brand-200 hover:text-white p-1.5">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <button onClick={() => router.push('/add-member')}
+                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition">
+                <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
               </button>
-              <button onClick={() => setShowInvite(!showInvite)} className="text-brand-200 hover:text-white p-1.5">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <button onClick={() => setShowInvite(!showInvite)}
+                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition">
+                <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                 </svg>
@@ -391,65 +418,92 @@ export default function DashboardPage() {
             </div>
           </div>
           {showInvite && (
-            <div className="mt-3 bg-brand-800 rounded-xl p-3">
-              <p className="text-brand-200 text-xs mb-1">Invite code</p>
-              <p className="font-mono text-lg font-bold tracking-widest text-white">{inviteCode}</p>
+            <div className="mt-3 bg-brand-50 border border-brand-100 rounded-2xl p-3">
+              <p className="text-brand-500 text-[10px] font-bold uppercase tracking-wider mb-1">Invite Code</p>
+              <p className="font-mono font-bold text-xl tracking-widest text-brand-800">{inviteCode}</p>
               <button onClick={() => navigator.clipboard?.writeText(inviteCode)}
-                className="text-brand-300 text-xs mt-1 underline">Copy</button>
+                className="text-brand-500 text-xs mt-1.5 font-semibold">Copy</button>
             </div>
           )}
         </div>
 
-        {/* Desktop page title bar */}
+        {/* Desktop page header */}
         <div className="hidden lg:flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-800">
-            {view === 'dashboard' ? 'Dashboard' : 'Documents'}
-          </h2>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">
+              {view === 'dashboard' ? 'Dashboard' : 'Documents'}
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {view === 'dashboard' ? `${records.length} reports · ${members.length} members` : 'All uploaded files'}
+            </p>
+          </div>
           {view === 'dashboard' && (
             <button onClick={() => router.push('/upload')}
-              className="flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded-xl text-sm transition">
+              className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition shadow-sm">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
               </svg>
               Upload Report
             </button>
           )}
         </div>
 
-        {/* ── Dashboard view ── */}
+        {/* ── Dashboard content ── */}
         {view === 'dashboard' && (
-          <div className="px-4 lg:px-6 py-4 space-y-4 pb-24 lg:pb-6">
+          <div className="px-4 lg:px-6 py-5 space-y-5 pb-24 lg:pb-8">
+
+            {/* Member health cards */}
             {memberSummaries.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {memberSummaries.map(m => <MemberHealthCard key={m.id} member={m} />)}
+              <div>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Family Members</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {memberSummaries.map(m => <MemberHealthCard key={m.id} member={m} />)}
+                </div>
               </div>
             )}
-            <FilterBar members={members} filters={filters} onChange={handleFilterChange} />
-            <div className="flex gap-3">
-              <div className="bg-white rounded-xl p-3 flex-1 text-center shadow-sm">
-                <p className="text-2xl font-bold text-brand-700">{records.length}</p>
-                <p className="text-xs text-gray-500">Reports</p>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-white rounded-2xl shadow-card px-4 py-3.5 border border-gray-100">
+                <p className="text-2xl font-black text-gray-900">{records.length}</p>
+                <p className="text-xs text-gray-400 font-medium mt-0.5">Total Reports</p>
               </div>
-              <div className="bg-white rounded-xl p-3 flex-1 text-center shadow-sm">
-                <p className="text-2xl font-bold text-brand-700">{members.length}</p>
-                <p className="text-xs text-gray-500">Members</p>
+              <div className="bg-white rounded-2xl shadow-card px-4 py-3.5 border border-gray-100">
+                <p className="text-2xl font-black text-gray-900">{members.length}</p>
+                <p className="text-xs text-gray-400 font-medium mt-0.5">Members</p>
               </div>
-              <div className="bg-white rounded-xl p-3 flex-1 text-center shadow-sm">
-                <p className="text-2xl font-bold text-green-600">
-                  {records.filter(r => {
-                    const sd = r.structured_data;
-                    return Array.isArray(sd) ? sd.length > 0 : (sd?.quantitative?.length > 0 || sd?.qualitative?.length > 0);
-                  }).length}
-                </p>
-                <p className="text-xs text-gray-500">Extracted</p>
+              <div className="bg-white rounded-2xl shadow-card px-4 py-3.5 border border-gray-100">
+                <p className="text-2xl font-black text-emerald-500">{extractedCount}</p>
+                <p className="text-xs text-gray-400 font-medium mt-0.5">Extracted</p>
               </div>
             </div>
+
+            {/* Filters + records */}
+            <div>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Records</h3>
+              <FilterBar members={members} filters={filters} onChange={handleFilterChange} />
+            </div>
+
             {loading ? (
-              <div className="text-center py-12 text-gray-400">Loading…</div>
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="bg-white rounded-2xl h-24 animate-pulse border border-gray-100" />
+                ))}
+              </div>
             ) : records.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-5xl mb-3">🏥</div>
-                <p className="text-gray-500 text-sm">No records yet.<br />Upload your first medical report.</p>
+              <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-card">
+                <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                      d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <p className="text-gray-600 font-semibold text-sm">No reports yet</p>
+                <p className="text-gray-400 text-xs mt-1">Upload your first medical report</p>
+                <button onClick={() => router.push('/upload')}
+                  className="mt-4 inline-flex items-center gap-2 bg-brand-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-brand-700 transition">
+                  Upload Report
+                </button>
               </div>
             ) : (
               <div className="space-y-3">
@@ -459,41 +513,41 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Documents view ── */}
+        {/* ── Documents content ── */}
         {view === 'documents' && (
           <DocumentsView records={records} members={members} />
         )}
       </div>
 
-      {/* ── Mobile bottom tab bar ── */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex items-center z-40">
+      {/* ── Mobile bottom tab bar ─────────────────────────────────────────────── */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur border-t border-gray-200 flex items-end z-40 pb-safe">
         <button onClick={() => setView('dashboard')}
-          className={`flex-1 flex flex-col items-center py-3 gap-1 text-xs font-semibold transition-colors ${view === 'dashboard' ? 'text-brand-700' : 'text-gray-400'}`}>
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          className={`flex-1 flex flex-col items-center py-3 gap-1 text-xs font-semibold transition-colors ${view === 'dashboard' ? 'text-brand-600' : 'text-gray-400'}`}>
+          <svg className="w-5 h-5" fill={view === 'dashboard' ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
-          Dashboard
+          Home
         </button>
 
-        {/* Upload FAB — center tab */}
+        {/* Upload FAB */}
         <button onClick={() => router.push('/upload')}
-          className="flex flex-col items-center -mt-5 px-5">
-          <div className="w-14 h-14 rounded-full bg-brand-700 flex items-center justify-center shadow-lg border-4 border-white">
+          className="flex flex-col items-center -mt-6 px-5 pb-1">
+          <div className="w-14 h-14 rounded-full bg-brand-600 flex items-center justify-center shadow-lg ring-4 ring-white">
             <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
             </svg>
           </div>
-          <span className="text-xs font-semibold text-brand-700 mt-1">Upload</span>
+          <span className="text-[10px] font-bold text-brand-600 mt-1">Upload</span>
         </button>
 
         <button onClick={() => setView('documents')}
-          className={`flex-1 flex flex-col items-center py-3 gap-1 text-xs font-semibold transition-colors ${view === 'documents' ? 'text-brand-700' : 'text-gray-400'}`}>
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          className={`flex-1 flex flex-col items-center py-3 gap-1 text-xs font-semibold transition-colors ${view === 'documents' ? 'text-brand-600' : 'text-gray-400'}`}>
+          <svg className="w-5 h-5" fill={view === 'documents' ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          Documents
+          Docs
         </button>
       </div>
 

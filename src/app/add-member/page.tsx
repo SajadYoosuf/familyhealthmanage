@@ -150,15 +150,16 @@ export default function AddMemberPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-brand-700 text-white px-4 pt-10 pb-6 flex items-center gap-3">
-        <button onClick={() => router.back()} className="text-brand-200 hover:text-white">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      <div className="bg-white border-b border-gray-100 px-4 pt-12 pb-4 flex items-center gap-3 sticky top-0 z-10">
+        <button onClick={() => router.back()}
+          className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition text-gray-600 flex-shrink-0">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         <div>
-          <h1 className="text-xl font-bold">Add Family Member</h1>
-          <p className="text-brand-200 text-sm">Create their account &amp; share via WhatsApp</p>
+          <h1 className="text-lg font-bold text-gray-900">Add Family Member</h1>
+          <p className="text-xs text-gray-400">Create their account &amp; share via WhatsApp</p>
         </div>
       </div>
 
