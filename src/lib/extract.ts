@@ -30,10 +30,19 @@ type TestPattern = {
 
 const KNOWN_TESTS: TestPattern[] = [
   // Blood Sugar
-  { test: 'Random Blood Sugar', patterns: [/(?:random\s+blood\s+sugar|rbs|casual\s+blood\s+sugar)\s*[:\-]?\s*(\d+\.?\d*)/gi], unit: 'mg/dL', normal: '<140', high: 140, low: 0 },
-  { test: 'Fasting Blood Sugar', patterns: [/(?:fasting\s+(?:blood\s+)?(?:sugar|glucose)|fbs|fbg)\s*[:\-]?\s*(\d+\.?\d*)/gi], unit: 'mg/dL', normal: '70–100', high: 100, low: 70 },
-  { test: 'Post Prandial Sugar', patterns: [/(?:post\s*prandial|pp\s*glucose|pbg)\s*[:\-]?\s*(\d+\.?\d*)/gi], unit: 'mg/dL', normal: '<140', high: 140, low: 0 },
-  { test: 'HbA1c', patterns: [/(?:hba1c|hb\s*a1c|glycated\s+hemoglobin|a1c)\s*[:\-]?\s*(\d+\.?\d*)/gi], unit: '%', normal: '<5.7', high: 5.7, low: 0 },
+  { test: 'Random Blood Sugar', patterns: [
+    /(?:random\s+blood\s+(?:glucose|sugar)|rbs|casual\s+blood\s+(?:sugar|glucose))\s*[:\-\|]?\s*(\d+\.?\d*)/gi,
+    /blood\s+(?:glucose|sugar)\s*[\[\(]?\s*random\s*[\]\)]?\s*[:\-\|]?\s*(\d+\.?\d*)/gi,
+  ], unit: 'mg/dL', normal: '<140', high: 140, low: 0 },
+  { test: 'Fasting Blood Sugar', patterns: [
+    /(?:fasting\s+(?:blood\s+)?(?:sugar|glucose)|fbs|fbg)\s*[:\-\|]?\s*(\d+\.?\d*)/gi,
+    /blood\s+(?:glucose|sugar)\s*[\[\(]?\s*fasting\s*[\]\)]?\s*[:\-\|]?\s*(\d+\.?\d*)/gi,
+  ], unit: 'mg/dL', normal: '70–100', high: 100, low: 70 },
+  { test: 'Post Prandial Sugar', patterns: [/(?:post\s*prandial|pp\s*glucose|pbg|ppbs)\s*[:\-\|]?\s*(\d+\.?\d*)/gi], unit: 'mg/dL', normal: '<140', high: 140, low: 0 },
+  { test: 'Blood Sugar', patterns: [
+    /\bblood\s+(?:sugar|glucose)\b\s+(\d{2,3}\.?\d*)/gi,
+  ], unit: 'mg/dL', normal: '<140', high: 140, low: 0 },
+  { test: 'HbA1c', patterns: [/(?:hba1c|hb\s*a1c|glycated\s+hemoglobin|a1c)\s*[:\-\|]?\s*(\d+\.?\d*)/gi], unit: '%', normal: '<5.7', high: 5.7, low: 0 },
 
   // CBC — Complete Blood Count
   { test: 'Hemoglobin', patterns: [/(?:hemoglobin|haemoglobin|hb|hgb)\s*[:\-]?\s*(\d+\.?\d*)/gi], unit: 'g/dL', normal: '12–17', high: 17, low: 12 },
@@ -199,7 +208,7 @@ export function detectCategory(text: string): string {
   if (/cholesterol|triglyceride|\bhdl\b|\bldl\b|lipid\s+profile/.test(t))
     return 'Cholesterol / Lipid Profile';
 
-  if (/blood\s+sugar|glucose|\bhba1c\b|fasting\s+sugar|random\s+blood\s+sugar|diabet/.test(t))
+  if (/blood\s+(?:sugar|glucose)|random\s+blood|fasting\s+(?:blood|sugar)|\bhba1c\b|\brbs\b|\bfbs\b|\bppbs\b|diabet/.test(t))
     return 'Blood Sugar / Diabetes';
 
   if (/\btsh\b|thyroid|thyroxine/.test(t))
