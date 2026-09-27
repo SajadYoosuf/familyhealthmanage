@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { extractTextFromPdf, extractTextFromImage, extractMedicalValues, detectCategory, extractReportDate } from '@/lib/extract';
 
 export async function POST(req: NextRequest) {
   const supabase = createClient();
+  const admin = createAdminClient();
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
@@ -35,8 +37,8 @@ export async function POST(req: NextRequest) {
   const fileExt = isPdf ? 'pdf' : file.name.split('.').pop() || 'jpg';
   const storagePath = `${uploader.family_id}/${Date.now()}.${fileExt}`;
 
-  // Upload file to Supabase Storage
-  const { error: uploadError } = await supabase.storage
+  // Upload file to Supabase Storage via admin client (bypasses RLS)
+  const { error: uploadError } = await admin.storage
     .from('health-files')
     .upload(storagePath, buffer, { contentType: file.type });
 
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: uploadError.message }, { status: 500 });
   }
 
-  const { data: { publicUrl } } = supabase.storage.from('health-files').getPublicUrl(storagePath);
+  const { data: { publicUrl } } = admin.storage.from('health-files').getPublicUrl(storagePath);
 
   // Extract text
   let rawText = '';
