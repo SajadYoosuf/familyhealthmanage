@@ -57,15 +57,21 @@ const DOC_CATEGORIES = [
 function DocumentsView({ records, members }: { records: DocRecord[]; members: Member[] }) {
   const [memberId, setMemberId] = useState('');
   const [category, setCategory] = useState('');
+  const [month, setMonth] = useState('');
 
   const filtered = useMemo(() =>
     records.filter(r => {
       if (!r.file_url) return false;
       if (memberId && r.member?.id !== memberId) return false;
       if (category && r.category !== category) return false;
+      if (month) {
+        const d = r.report_date ?? r.created_at;
+        const ym = new Date(d).toISOString().slice(0, 7); // "YYYY-MM"
+        if (ym !== month) return false;
+      }
       return true;
     }),
-    [records, memberId, category]
+    [records, memberId, category, month]
   );
 
   const dateStr = (r: DocRecord) => {
@@ -77,6 +83,8 @@ function DocumentsView({ records, members }: { records: DocRecord[]; members: Me
     <div className="px-4 lg:px-6 py-4 space-y-4 pb-24 lg:pb-6">
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
+        <input type="month" value={month} onChange={e => setMonth(e.target.value)}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white" />
         <select value={memberId} onChange={e => setMemberId(e.target.value)}
           className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white">
           <option value="">All members</option>
@@ -87,8 +95,8 @@ function DocumentsView({ records, members }: { records: DocRecord[]; members: Me
           <option value="">All categories</option>
           {DOC_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        {(memberId || category) && (
-          <button onClick={() => { setMemberId(''); setCategory(''); }}
+        {(month || memberId || category) && (
+          <button onClick={() => { setMonth(''); setMemberId(''); setCategory(''); }}
             className="text-sm text-gray-500 border border-gray-200 rounded-xl px-3 py-2 bg-white hover:border-gray-300">
             Clear
           </button>
