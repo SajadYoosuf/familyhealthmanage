@@ -1,13 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import type { MedicalValue } from '@/lib/extract';
+import type { MedicalValue, QualitativeValue } from '@/lib/extract';
+
+type StructuredData = {
+  quantitative?: MedicalValue[];
+  qualitative?: QualitativeValue[];
+} | MedicalValue[]; // backwards compat
 
 type Record = {
   id: string;
   category: string;
   report_date: string | null;
-  structured_data: MedicalValue[];
+  structured_data: StructuredData;
   file_url: string | null;
   file_type: string | null;
   member: { id: string; name: string; relation: string } | null;
@@ -44,7 +49,11 @@ export function RecordCard({ record }: { record: Record }) {
     ? new Date(record.report_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
     : new Date(record.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
-  const hasValues = record.structured_data && record.structured_data.length > 0;
+  // Handle both old array format and new {quantitative, qualitative} format
+  const sd = record.structured_data;
+  const quantitative: MedicalValue[] = Array.isArray(sd) ? sd : (sd?.quantitative || []);
+  const qualitative: QualitativeValue[] = Array.isArray(sd) ? [] : (sd?.qualitative || []);
+  const hasValues = quantitative.length > 0 || qualitative.length > 0;
   const memberRelation = record.member?.relation || 'other';
 
   return (
@@ -77,25 +86,45 @@ export function RecordCard({ record }: { record: Record }) {
 
       {/* Extracted Values */}
       {hasValues ? (
-        <div className="p-4">
-          <table className="w-full text-sm">
-            <tbody className="divide-y divide-gray-50">
-              {record.structured_data.map((v, i) => (
-                <tr key={i} className="py-1">
-                  <td className="py-1.5 text-gray-600 pr-2">{v.test}</td>
-                  <td className="py-1.5 font-semibold text-gray-900 text-right pr-2 whitespace-nowrap">
-                    {v.value} <span className="text-xs text-gray-400 font-normal">{v.unit}</span>
-                  </td>
-                  <td className="py-1.5 text-right whitespace-nowrap">
-                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${STATUS_STYLES[v.status]}`}>
-                      {STATUS_ICONS[v.status]} {v.status}
-                    </span>
-                  </td>
-                </tr>
+        <div className="p-4 space-y-3">
+          {/* Quantitative (numeric) values */}
+          {quantitative.length > 0 && (
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-gray-50">
+                {quantitative.map((v, i) => (
+                  <tr key={i}>
+                    <td className="py-1.5 text-gray-600 pr-2 text-xs">{v.test}</td>
+                    <td className="py-1.5 font-semibold text-gray-900 text-right pr-2 whitespace-nowrap text-xs">
+                      {v.value} <span className="text-gray-400 font-normal">{v.unit}</span>
+                    </td>
+                    <td className="py-1.5 text-right whitespace-nowrap">
+                      <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${STATUS_STYLES[v.status]}`}>
+                        {STATUS_ICONS[v.status]} {v.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {/* Qualitative (text result) values — Blood Group, Viral Markers */}
+          {qualitative.length > 0 && (
+            <div className="space-y-1.5">
+              {qualitative.map((v, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600">{v.test}</span>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    v.status === 'abnormal' ? 'bg-red-50 text-red-600' :
+                    v.status === 'info' ? 'bg-blue-50 text-blue-700' :
+                    'bg-green-50 text-green-600'
+                  }`}>
+                    {v.result}
+                  </span>
+                </div>
               ))}
-            </tbody>
-          </table>
-          <p className="text-xs text-gray-400 mt-2">Normal ranges: {record.structured_data[0]?.normal_range && `${record.structured_data[0].test}: ${record.structured_data[0].normal_range}`}</p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="p-4 text-sm text-gray-500">

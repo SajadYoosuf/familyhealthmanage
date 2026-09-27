@@ -62,7 +62,11 @@ export async function POST(req: NextRequest) {
   }
 
   // Extract medical values
-  const structuredData = rawText ? extractMedicalValues(rawText) : [];
+  const extraction = rawText ? extractMedicalValues(rawText) : { quantitative: [], qualitative: [] };
+  const structuredData = {
+    quantitative: extraction.quantitative,
+    qualitative: extraction.qualitative,
+  };
 
   const { data: record, error: insertError } = await supabase
     .from('health_records')
@@ -84,5 +88,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
-  return NextResponse.json({ record, extracted_count: structuredData.length });
+  const totalExtracted = extraction.quantitative.length + extraction.qualitative.length;
+  return NextResponse.json({ record, extracted_count: totalExtracted });
 }

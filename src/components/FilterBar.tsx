@@ -1,12 +1,14 @@
 'use client';
 
 const CATEGORIES = [
+  'Complete Blood Count (CBC)',
   'Blood Sugar / Diabetes',
+  'Liver Function Test (LFT)',
+  'Renal Function Test (RFT)',
+  'Blood Group',
+  'Viral Markers',
   'Cholesterol / Lipid Profile',
-  'Blood Count (CBC)',
   'Blood Pressure',
-  'Kidney Function',
-  'Liver Function (LFT)',
   'Thyroid (TSH/T3/T4)',
   'Vitamin Profile',
   'Prescription',
