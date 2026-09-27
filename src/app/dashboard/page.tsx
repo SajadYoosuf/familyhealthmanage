@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { RecordCard } from '@/components/RecordCard';
@@ -121,16 +122,29 @@ function DocDropdown({ value, onChange, options, placeholder }: {
   options: { value: string; label: string }[]; placeholder: string;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const openDropdown = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 6, left: r.left, width: Math.max(r.width, 220) });
+    }
+    setOpen(true);
+  };
+
   useEffect(() => {
-    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    if (!open) return;
+    function h(e: MouseEvent) { if (btnRef.current && !btnRef.current.contains(e.target as Node)) setOpen(false); }
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
-  }, []);
+  }, [open]);
+
   const label = options.find(o => o.value === value)?.label || placeholder;
+
   return (
-    <div ref={ref} className="relative flex-shrink-0">
-      <button type="button" onClick={() => setOpen(p => !p)}
+    <div className="flex-shrink-0">
+      <button ref={btnRef} type="button" onClick={() => open ? setOpen(false) : openDropdown()}
         className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border transition whitespace-nowrap ${
           value ? 'bg-brand-600 text-white border-brand-600 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
         }`}>
@@ -140,12 +154,14 @@ function DocDropdown({ value, onChange, options, placeholder }: {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      {open && (
-        <div className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-card-lg border border-gray-100 z-50 min-w-[200px] max-h-64 overflow-y-auto py-1.5">
+      {open && typeof document !== 'undefined' && createPortal(
+        <div onMouseDown={e => e.stopPropagation()}
+          style={{ position: 'fixed', top: pos.top, left: pos.left, minWidth: pos.width, zIndex: 9999 }}
+          className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 max-h-64 overflow-y-auto py-1.5">
           <button onClick={() => { onChange(''); setOpen(false); }}
             className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left hover:bg-gray-50 ${!value ? 'text-brand-600 font-semibold' : 'text-gray-500 font-medium'}`}>
-            {!value && <svg className="w-3.5 h-3.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
-            {value && <span className="w-3.5"/>}
+            {!value && <svg className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+            {value && <span className="w-3.5 flex-shrink-0"/>}
             {placeholder}
           </button>
           <div className="mx-3 border-t border-gray-100 mb-1"/>
@@ -154,11 +170,12 @@ function DocDropdown({ value, onChange, options, placeholder }: {
               className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left hover:bg-gray-50 ${value === opt.value ? 'text-brand-600 font-semibold bg-brand-50/50' : 'text-gray-700'}`}>
               {value === opt.value
                 ? <svg className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
-                : <span className="w-3.5"/>}
+                : <span className="w-3.5 flex-shrink-0"/>}
               <span className="truncate">{opt.label}</span>
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
