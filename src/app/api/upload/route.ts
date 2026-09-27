@@ -89,5 +89,5 @@ export async function POST(req: NextRequest) {
   }
 
   const totalExtracted = extraction.quantitative.length + extraction.qualitative.length;
-  return NextResponse.json({ record, extracted_count: totalExtracted });
+  return NextResponse.json({ record, extracted_count: totalExtracted, raw_text_length: rawText.length });
 }

@@ -13,7 +13,7 @@ export default function UploadPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [result, setResult] = useState<{ extracted: number } | null>(null);
+  const [result, setResult] = useState<{ extracted: number; rawTextLength: number } | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -54,7 +54,7 @@ export default function UploadPage() {
       return;
     }
 
-    setResult({ extracted: data.extracted_count });
+    setResult({ extracted: data.extracted_count, rawTextLength: data.raw_text_length ?? 0 });
     setLoading(false);
   }
 
@@ -67,7 +67,9 @@ export default function UploadPage() {
           <p className="text-gray-500 text-sm mb-6">
             {result.extracted > 0
               ? `${result.extracted} medical values were automatically extracted.`
-              : 'Report saved. Values could not be auto-extracted — you can view the raw text on the dashboard.'}
+              : result.rawTextLength === 0
+                ? 'This looks like a scanned PDF — text could not be read. Try uploading a photo (JPG) of the report instead for better results.'
+                : 'Text was read from the report but specific values could not be matched. You can view the raw text on the dashboard.'}
           </p>
           <div className="space-y-3">
             <button onClick={() => router.push('/dashboard')}
