@@ -320,7 +320,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 lg:flex">
 
       {/* ── Sidebar (desktop) ─────────────────────────────────────────────────── */}
-      <aside className="hidden lg:flex flex-col w-60 bg-white border-r border-gray-100 min-h-screen sticky top-0 flex-shrink-0">
+      <aside className="hidden lg:flex flex-col w-60 bg-white border-r border-gray-100 h-screen sticky top-0 flex-shrink-0 overflow-hidden">
         {/* Brand */}
         <div className="px-5 py-5 border-b border-gray-100">
           <div className="flex items-center gap-2.5 mb-3">
@@ -338,7 +338,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           <NavItem icon={dashIcon} label="Dashboard" active={view === 'dashboard'} onClick={() => setView('dashboard')} />
           <NavItem icon={docsIcon} label="Documents" active={view === 'documents'} onClick={() => setView('documents')} />
         </nav>
