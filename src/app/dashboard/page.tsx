@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { RecordCard } from '@/components/RecordCard';
@@ -116,6 +116,54 @@ const DOC_CATEGORIES = [
   'Prescription', 'Other',
 ];
 
+function DocDropdown({ value, onChange, options, placeholder }: {
+  value: string; onChange: (v: string) => void;
+  options: { value: string; label: string }[]; placeholder: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+  const label = options.find(o => o.value === value)?.label || placeholder;
+  return (
+    <div ref={ref} className="relative flex-shrink-0">
+      <button type="button" onClick={() => setOpen(p => !p)}
+        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border transition whitespace-nowrap ${
+          value ? 'bg-brand-600 text-white border-brand-600 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+        }`}>
+        <span className="max-w-[140px] truncate">{label}</span>
+        <svg className={`w-3.5 h-3.5 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-card-lg border border-gray-100 z-50 min-w-[200px] max-h-64 overflow-y-auto py-1.5">
+          <button onClick={() => { onChange(''); setOpen(false); }}
+            className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left hover:bg-gray-50 ${!value ? 'text-brand-600 font-semibold' : 'text-gray-500 font-medium'}`}>
+            {!value && <svg className="w-3.5 h-3.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+            {value && <span className="w-3.5"/>}
+            {placeholder}
+          </button>
+          <div className="mx-3 border-t border-gray-100 mb-1"/>
+          {options.map(opt => (
+            <button key={opt.value} onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left hover:bg-gray-50 ${value === opt.value ? 'text-brand-600 font-semibold bg-brand-50/50' : 'text-gray-700'}`}>
+              {value === opt.value
+                ? <svg className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
+                : <span className="w-3.5"/>}
+              <span className="truncate">{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DocumentsView({ records, members }: { records: DocRecord[]; members: Member[] }) {
   const [memberId, setMemberId] = useState('');
   const [category, setCategory] = useState('');
@@ -148,18 +196,20 @@ function DocumentsView({ records, members }: { records: DocRecord[]; members: Me
       <div className="px-4 lg:px-6 py-5 space-y-4 pb-24 lg:pb-8">
         {/* Filters */}
         <div className="flex flex-wrap gap-2 items-center">
-          <input type="month" value={month} onChange={e => setMonth(e.target.value)}
-            className={`border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white transition ${month ? 'border-brand-400 text-brand-700 bg-brand-50' : 'border-gray-200 text-gray-700'}`} />
-          <select value={memberId} onChange={e => setMemberId(e.target.value)}
-            className={`border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white transition ${memberId ? 'border-brand-400 text-brand-700 bg-brand-50' : 'border-gray-200 text-gray-700'}`}>
-            <option value="">All members</option>
-            {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
-          <select value={category} onChange={e => setCategory(e.target.value)}
-            className={`border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white transition ${category ? 'border-brand-400 text-brand-700 bg-brand-50' : 'border-gray-200 text-gray-700'}`}>
-            <option value="">All categories</option>
-            {DOC_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <div className="relative flex-shrink-0">
+            <input type="month" value={month} onChange={e => setMonth(e.target.value)}
+              className={`pl-9 pr-3 py-2 rounded-xl text-sm font-semibold border transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500 ${month ? 'bg-brand-600 text-white border-brand-600 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`} />
+            <svg className={`w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none ${month ? 'text-white' : 'text-gray-400'}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <DocDropdown value={memberId} onChange={setMemberId}
+            options={members.map(m => ({ value: m.id, label: m.name }))}
+            placeholder="All members" />
+          <DocDropdown value={category} onChange={setCategory}
+            options={DOC_CATEGORIES.map(c => ({ value: c, label: c }))}
+            placeholder="All categories" />
           {(month || memberId || category) && (
             <button onClick={() => { setMonth(''); setMemberId(''); setCategory(''); }}
               className="flex items-center gap-1.5 text-xs font-semibold text-red-500 border border-red-200 bg-red-50 rounded-xl px-3 py-2 hover:bg-red-100 transition">
@@ -345,13 +395,6 @@ export default function DashboardPage() {
 
         {/* Bottom actions */}
         <div className="px-3 py-4 border-t border-gray-100 space-y-1">
-          <button onClick={() => router.push('/upload')}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-brand-50 text-brand-700 hover:bg-brand-100 transition">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-            </svg>
-            Upload Report
-          </button>
           <button onClick={() => router.push('/add-member')}
             className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
