@@ -5,8 +5,26 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { RecordCard } from '@/components/RecordCard';
 import { FilterBar } from '@/components/FilterBar';
+import { MemberHealthCard, type MemberSummary } from '@/components/MemberHealthCard';
 
-type Member = { id: string; name: string; relation: string };
+type Member = {
+  id: string;
+  name: string;
+  relation: string;
+  blood_group?: string | null;
+  height_cm?: number | null;
+  weight_kg?: number | null;
+};
+
+function getLatestValue(records: any[], testNames: string[]) {
+  for (const rec of records) {
+    const sd = rec.structured_data;
+    const quant: any[] = Array.isArray(sd) ? sd : (sd?.quantitative || []);
+    const match = quant.find(v => testNames.some(n => v.test?.toLowerCase().includes(n)));
+    if (match) return { value: match.value, status: match.status };
+  }
+  return null;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -14,6 +32,7 @@ export default function DashboardPage() {
 
   const [records, setRecords] = useState<any[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [memberSummaries, setMemberSummaries] = useState<MemberSummary[]>([]);
   const [familyName, setFamilyName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [myName, setMyName] = useState('');
@@ -42,10 +61,28 @@ export default function DashboardPage() {
 
     const { data: allMembers } = await supabase
       .from('family_members')
-      .select('id, name, relation')
+      .select('id, name, relation, blood_group, height_cm, weight_kg')
       .eq('family_id', member.family_id);
 
     setMembers(allMembers || []);
+
+    // Fetch recent records to compute latest sugar/cholesterol per member
+    const { data: summaryRecs } = await supabase
+      .from('health_records')
+      .select('member_id, structured_data, created_at')
+      .eq('family_id', member.family_id)
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    const summaries: MemberSummary[] = (allMembers || []).map(m => {
+      const recs = (summaryRecs || []).filter(r => r.member_id === m.id);
+      return {
+        ...m,
+        latest_sugar: getLatestValue(recs, ['random blood sugar', 'fasting blood sugar', 'blood sugar', 'glucose', 'post prandial']),
+        latest_cholesterol: getLatestValue(recs, ['total cholesterol', 'cholesterol']),
+      };
+    });
+    setMemberSummaries(summaries);
   }, [supabase, router]);
 
   const loadRecords = useCallback(async () => {
@@ -118,6 +155,14 @@ export default function DashboardPage() {
       </div>
 
       <div className="px-4 py-4 space-y-4">
+
+        {/* Member Health Cards */}
+        {memberSummaries.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {memberSummaries.map(m => <MemberHealthCard key={m.id} member={m} />)}
+          </div>
+        )}
+
         {/* Filters */}
         <FilterBar members={members} filters={filters} onChange={handleFilterChange} />
 

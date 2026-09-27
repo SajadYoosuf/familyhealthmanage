@@ -28,6 +28,9 @@ export default function AddMemberPage() {
   const [name, setName] = useState('');
   const [relation, setRelation] = useState('');
   const [password, setPassword] = useState(generatePassword());
+  const [bloodGroup, setBloodGroup] = useState('');
+  const [heightCm, setHeightCm] = useState('');
+  const [weightKg, setWeightKg] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
@@ -52,7 +55,12 @@ export default function AddMemberPage() {
     const res = await fetch('/api/family/add-member', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name, relation, password }),
+      body: JSON.stringify({
+        email, name, relation, password,
+        blood_group: bloodGroup || null,
+        height_cm: heightCm ? parseFloat(heightCm) : null,
+        weight_kg: weightKg ? parseFloat(weightKg) : null,
+      }),
     });
 
     const data = await res.json();
@@ -124,7 +132,7 @@ export default function AddMemberPage() {
             </button>
 
             <div className="flex gap-2">
-              <button onClick={() => { setDone(false); setEmail(''); setName(''); setRelation(''); setPassword(generatePassword()); }}
+              <button onClick={() => { setDone(false); setEmail(''); setName(''); setRelation(''); setPassword(generatePassword()); setBloodGroup(''); setHeightCm(''); setWeightKg(''); }}
                 className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold">
                 Add Another
               </button>
@@ -183,6 +191,38 @@ export default function AddMemberPage() {
           <input type="email" placeholder="their.email@gmail.com" value={email}
             onChange={e => setEmail(e.target.value)} required
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white" />
+        </div>
+
+        {/* Health info (optional) */}
+        <div className="space-y-3">
+          <p className="text-sm font-semibold text-gray-700">Health info <span className="font-normal text-gray-400">(optional — can add later)</span></p>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1.5">Blood Group</label>
+            <div className="grid grid-cols-4 gap-2">
+              {['A+','A−','B+','B−','AB+','AB−','O+','O−'].map(bg => (
+                <button key={bg} type="button" onClick={() => setBloodGroup(bloodGroup === bg ? '' : bg)}
+                  className={`py-2 rounded-xl text-sm font-semibold border-2 transition ${bloodGroup === bg ? 'border-brand-700 bg-brand-50 text-brand-700' : 'border-gray-200 text-gray-600 bg-white hover:border-brand-300'}`}>
+                  {bg}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1.5">Height (cm)</label>
+              <input type="number" placeholder="e.g. 165" value={heightCm}
+                onChange={e => setHeightCm(e.target.value)} min="100" max="250"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1.5">Weight (kg)</label>
+              <input type="number" placeholder="e.g. 68" value={weightKg}
+                onChange={e => setWeightKg(e.target.value)} min="20" max="250"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white" />
+            </div>
+          </div>
         </div>
 
         {/* Auto-generated password */}

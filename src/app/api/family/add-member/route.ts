@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'You are not in a family' }, { status: 400 });
   }
 
-  const { email, name, relation, password } = await req.json();
+  const { email, name, relation, password, blood_group, height_cm, weight_kg } = await req.json();
 
   if (!email || !name || !relation || !password) {
     return NextResponse.json({ error: 'All fields required' }, { status: 400 });
@@ -47,6 +47,9 @@ export async function POST(req: NextRequest) {
       user_id: newUser.user.id,
       name,
       relation,
+      ...(blood_group && { blood_group }),
+      ...(height_cm && { height_cm }),
+      ...(weight_kg && { weight_kg }),
     });
 
   if (memberError) {
