@@ -297,6 +297,7 @@ export async function extractTextFromImage(buffer: Buffer): Promise<string> {
   const worker = await createWorker('eng', 1, {
     langPath: process.cwd(),
     cacheMethod: 'none',
+    gzip: false,
   });
   try {
     const { data: { text } } = await worker.recognize(buffer);
