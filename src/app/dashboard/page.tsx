@@ -54,10 +54,79 @@ const DOC_CATEGORIES = [
   'Prescription', 'Other',
 ];
 
+async function downloadFile(url: string, filename: string) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    window.open(url, '_blank');
+  }
+}
+
+function FileViewer({ record, onClose }: { record: DocRecord; onClose: () => void }) {
+  const label = `${record.category} — ${record.member?.name ?? ''}`;
+  const ext = record.file_type === 'pdf' ? 'pdf' : 'jpg';
+  const filename = `${label}.${ext}`.replace(/[^a-z0-9.\-_ ]/gi, '_');
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-black">
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-4 py-3 bg-black/80 flex-shrink-0">
+        <div className="min-w-0">
+          <p className="text-white font-semibold text-sm truncate">{record.category}</p>
+          <p className="text-gray-400 text-xs">{record.member?.name ?? '—'}</p>
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+          <button
+            onClick={() => downloadFile(record.file_url!, filename)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Download
+          </button>
+          <button onClick={onClose}
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Viewer */}
+      <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+        {record.file_type === 'pdf' ? (
+          <iframe
+            src={record.file_url!}
+            className="w-full h-full"
+            title={record.category}
+          />
+        ) : (
+          <img
+            src={record.file_url!}
+            alt={record.category}
+            className="max-w-full max-h-full object-contain"
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 function DocumentsView({ records, members }: { records: DocRecord[]; members: Member[] }) {
   const [memberId, setMemberId] = useState('');
   const [category, setCategory] = useState('');
   const [month, setMonth] = useState('');
+  const [viewing, setViewing] = useState<DocRecord | null>(null);
 
   const filtered = useMemo(() =>
     records.filter(r => {
@@ -66,7 +135,7 @@ function DocumentsView({ records, members }: { records: DocRecord[]; members: Me
       if (category && r.category !== category) return false;
       if (month) {
         const d = r.report_date ?? r.created_at;
-        const ym = new Date(d).toISOString().slice(0, 7); // "YYYY-MM"
+        const ym = new Date(d).toISOString().slice(0, 7);
         if (ym !== month) return false;
       }
       return true;
@@ -74,78 +143,76 @@ function DocumentsView({ records, members }: { records: DocRecord[]; members: Me
     [records, memberId, category, month]
   );
 
-  const dateStr = (r: DocRecord) => {
+  const fmt = (r: DocRecord) => {
     const d = r.report_date ?? r.created_at;
     return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' });
   };
 
   return (
-    <div className="px-4 lg:px-6 py-4 space-y-4 pb-24 lg:pb-6">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <input type="month" value={month} onChange={e => setMonth(e.target.value)}
-          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white" />
-        <select value={memberId} onChange={e => setMemberId(e.target.value)}
-          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white">
-          <option value="">All members</option>
-          {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
-        <select value={category} onChange={e => setCategory(e.target.value)}
-          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white">
-          <option value="">All categories</option>
-          {DOC_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        {(month || memberId || category) && (
-          <button onClick={() => { setMonth(''); setMemberId(''); setCategory(''); }}
-            className="text-sm text-gray-500 border border-gray-200 rounded-xl px-3 py-2 bg-white hover:border-gray-300">
-            Clear
-          </button>
-        )}
-        <span className="self-center text-xs text-gray-400 ml-auto">{filtered.length} file{filtered.length !== 1 ? 's' : ''}</span>
-      </div>
+    <>
+      {viewing && <FileViewer record={viewing} onClose={() => setViewing(null)} />}
 
-      {/* Grid */}
-      {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="text-5xl mb-3">📂</div>
-          <p className="text-gray-400 text-sm">No documents found</p>
+      <div className="px-4 lg:px-6 py-4 space-y-4 pb-24 lg:pb-6">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2">
+          <input type="month" value={month} onChange={e => setMonth(e.target.value)}
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white" />
+          <select value={memberId} onChange={e => setMemberId(e.target.value)}
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white">
+            <option value="">All members</option>
+            {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+          <select value={category} onChange={e => setCategory(e.target.value)}
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white">
+            <option value="">All categories</option>
+            {DOC_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          {(month || memberId || category) && (
+            <button onClick={() => { setMonth(''); setMemberId(''); setCategory(''); }}
+              className="text-sm text-gray-500 border border-gray-200 rounded-xl px-3 py-2 bg-white hover:border-gray-300">
+              Clear
+            </button>
+          )}
+          <span className="self-center text-xs text-gray-400 ml-auto">
+            {filtered.length} file{filtered.length !== 1 ? 's' : ''}
+          </span>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filtered.map(r => (
-            <div key={r.id} className="bg-white rounded-2xl shadow-sm p-4 flex flex-col gap-3 border border-gray-100">
-              {/* Icon + type */}
-              <div className="flex items-center gap-3">
-                {r.file_type === 'pdf' ? (
-                  <div className="w-10 h-12 flex-shrink-0 bg-red-50 rounded-lg flex flex-col items-center justify-center border border-red-100">
-                    <span className="text-red-500 text-xs font-bold">PDF</span>
+
+        {/* Grid */}
+        {filtered.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="text-5xl mb-3">📂</div>
+            <p className="text-gray-400 text-sm">No documents found</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {filtered.map(r => (
+              <div key={r.id}
+                onClick={() => setViewing(r)}
+                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-brand-200 transition group">
+                {/* Preview */}
+                {r.file_type !== 'pdf' ? (
+                  <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
+                    <img src={r.file_url!} alt={r.category}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   </div>
                 ) : (
-                  <div className="w-10 h-12 flex-shrink-0 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100">
-                    <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+                  <div className="aspect-[4/3] bg-red-50 flex flex-col items-center justify-center border-b border-red-100">
+                    <span className="text-4xl font-black text-red-200 leading-none">PDF</span>
+                    <span className="text-xs text-red-400 mt-1 px-2 text-center truncate w-full px-3">{r.category}</span>
                   </div>
                 )}
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 leading-tight truncate">{r.category}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{r.member?.name ?? '—'} · {dateStr(r)}</p>
+                {/* Meta */}
+                <div className="p-2.5">
+                  <p className="text-xs font-semibold text-gray-800 truncate leading-tight">{r.category}</p>
+                  <p className="text-xs text-gray-400 mt-0.5 truncate">{r.member?.name ?? '—'} · {fmt(r)}</p>
                 </div>
               </div>
-              <a href={r.file_url!} target="_blank" rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 py-2 rounded-xl border border-brand-200 text-brand-700 text-sm font-medium hover:bg-brand-50 transition">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                View / Download
-              </a>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
