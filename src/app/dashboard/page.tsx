@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { RecordCard } from '@/components/RecordCard';
 import { FilterBar } from '@/components/FilterBar';
 import { MemberHealthCard, type MemberSummary } from '@/components/MemberHealthCard';
+import { DocumentSidebar } from '@/components/DocumentSidebar';
 
 type Member = {
   id: string;
@@ -39,6 +40,7 @@ export default function DashboardPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ month: '', member_id: '', category: '' });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const loadFamilyInfo = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -121,6 +123,14 @@ export default function DashboardPage() {
             <h1 className="text-xl font-bold">{familyName || 'Family Health'}</h1>
           </div>
           <div className="flex items-center gap-2">
+            {/* Documents toggle — mobile only */}
+            <button onClick={() => setSidebarOpen(true)}
+              className="lg:hidden text-brand-200 hover:text-white p-1" title="Documents">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </button>
             <button onClick={() => router.push('/add-member')}
               className="text-brand-200 hover:text-white p-1" title="Add family member">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -154,7 +164,8 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div className="px-4 py-4 space-y-4">
+      <div className="flex min-h-0">
+      <div className="flex-1 min-w-0 px-4 py-4 space-y-4">
 
         {/* Member Health Cards */}
         {memberSummaries.length > 0 && (
@@ -199,8 +210,19 @@ export default function DashboardPage() {
         )}
       </div>
 
+      </div>{/* end main column */}
+
+      <DocumentSidebar
+        records={records}
+        members={members}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+
+      </div>{/* end flex row */}
+
       {/* Upload FAB */}
-      <div className="fixed bottom-6 right-4">
+      <div className="fixed bottom-6 right-4 lg:right-[calc(18rem+1rem)]">
         <button onClick={() => router.push('/upload')}
           className="flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-3.5 rounded-2xl shadow-lg transition">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
