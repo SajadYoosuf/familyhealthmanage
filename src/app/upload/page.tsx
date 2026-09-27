@@ -9,7 +9,6 @@ export default function UploadPage() {
   const supabase = createClient();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [reportDate, setReportDate] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -45,7 +44,6 @@ export default function UploadPage() {
 
     const form = new FormData();
     form.append('file', file);
-    if (reportDate) form.append('report_date', reportDate);
 
     const res = await fetch('/api/upload', { method: 'POST', body: form });
     const data = await res.json();
@@ -135,15 +133,7 @@ export default function UploadPage() {
           )}
         </div>
 
-        {/* Date */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Report date <span className="font-normal text-gray-400">(optional)</span></label>
-          <input type="date" value={reportDate} onChange={e => setReportDate(e.target.value)}
-            max={new Date().toISOString().split('T')[0]}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white" />
-        </div>
-
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error &&<p className="text-red-500 text-sm">{error}</p>}
 
         <button type="submit" disabled={loading}
           className="w-full py-4 rounded-2xl bg-brand-700 hover:bg-brand-800 text-white font-semibold text-base disabled:opacity-60 transition">

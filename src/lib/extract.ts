@@ -217,6 +217,66 @@ export function detectCategory(text: string): string {
   return 'Other';
 }
 
+const MONTHS: Record<string, string> = {
+  jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+  jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12',
+  january: '01', february: '02', march: '03', april: '04', june: '06',
+  july: '07', august: '08', september: '09', october: '10', november: '11', december: '12',
+};
+
+// Returns YYYY-MM-DD string or null
+export function extractReportDate(text: string): string | null {
+  // Try labeled dates first (most reliable): "Date: 12/05/2024", "Collection Date: 12-May-2024"
+  const labeled = text.match(
+    /(?:(?:report|collection|sample|test|examination|collected|tested|date\s+of\s+(?:collection|test|report))\s*[:\-]?\s*)(\d{1,2}[\s\/\-\.]\w+[\s\/\-\.]\d{2,4}|\d{4}[\-\/]\d{2}[\-\/]\d{2})/i
+  );
+  if (labeled) {
+    const parsed = parseDate(labeled[1]);
+    if (parsed) return parsed;
+  }
+
+  // Fallback: first date-shaped string anywhere in text
+  // DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
+  const numeric = text.match(/\b(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})\b/);
+  if (numeric) {
+    const [, d, m, y] = numeric;
+    return toISO(d, m, y);
+  }
+
+  // DD Month YYYY or DD-Month-YYYY
+  const textMonth = text.match(/\b(\d{1,2})[\s\-]+(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)[\s\-]+(\d{2,4})\b/i);
+  if (textMonth) {
+    const [, d, mon, y] = textMonth;
+    const m = MONTHS[mon.toLowerCase().slice(0, 3)];
+    if (m) return toISO(d, m, y);
+  }
+
+  return null;
+}
+
+function parseDate(str: string): string | null {
+  str = str.trim();
+  // YYYY-MM-DD
+  const iso = str.match(/^(\d{4})[\-\/](\d{2})[\-\/](\d{2})$/);
+  if (iso) return `${iso[1]}-${iso[2].padStart(2,'0')}-${iso[3].padStart(2,'0')}`;
+  // DD/MM/YYYY or DD-MM-YYYY
+  const dmy = str.match(/^(\d{1,2})[\s\/\-\.](\d{1,2})[\s\/\-\.](\d{2,4})$/);
+  if (dmy) return toISO(dmy[1], dmy[2], dmy[3]);
+  // DD Month YYYY
+  const dtm = str.match(/^(\d{1,2})[\s\-]+(\w+)[\s\-]+(\d{2,4})$/);
+  if (dtm) {
+    const m = MONTHS[dtm[2].toLowerCase().slice(0, 3)];
+    if (m) return toISO(dtm[1], m, dtm[3]);
+  }
+  return null;
+}
+
+function toISO(d: string, m: string, y: string): string | null {
+  const day = parseInt(d), month = parseInt(m), year = y.length === 2 ? 2000 + parseInt(y) : parseInt(y);
+  if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2000 || year > 2100) return null;
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
 export async function extractTextFromPdf(buffer: Buffer): Promise<string> {
   const pdfParse = (await import('pdf-parse/lib/pdf-parse.js')).default;
   const data = await pdfParse(buffer);

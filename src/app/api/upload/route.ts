@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { extractTextFromPdf, extractTextFromImage, extractMedicalValues, detectCategory } from '@/lib/extract';
+import { extractTextFromPdf, extractTextFromImage, extractMedicalValues, detectCategory, extractReportDate } from '@/lib/extract';
 
 export async function POST(req: NextRequest) {
   const supabase = createClient();
@@ -23,7 +23,6 @@ export async function POST(req: NextRequest) {
 
   const formData = await req.formData();
   const file = formData.get('file') as File;
-  const reportDate = formData.get('report_date') as string;
   const memberId = uploader.id;
 
   if (!file) {
@@ -58,8 +57,9 @@ export async function POST(req: NextRequest) {
     rawText = '';
   }
 
-  // Auto-detect category from report text
+  // Auto-detect category and date from report text
   const category = rawText ? detectCategory(rawText) : 'Other';
+  const reportDate = rawText ? extractReportDate(rawText) : null;
 
   // Extract medical values
   const extraction = rawText ? extractMedicalValues(rawText) : { quantitative: [], qualitative: [] };
