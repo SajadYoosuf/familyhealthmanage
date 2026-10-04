@@ -95,7 +95,7 @@ export default function AuthPage() {
     <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-600 to-teal-500 flex items-center justify-center p-4 lg:p-0">
 
       {/* ── Left panel — health data preview (desktop only) ── */}
-      <div className="hidden lg:flex flex-col justify-center flex-1 min-w-0 h-screen px-12 xl:px-20 gap-6">
+      <div className="hidden lg:flex flex-col justify-center w-1/2 h-screen px-12 xl:px-20 gap-6">
 
         <div className="mb-2">
           <div className="flex items-center gap-2.5 mb-4">
@@ -181,7 +181,7 @@ export default function AuthPage() {
       </div>
 
       {/* ── Right panel — auth card ── */}
-      <div className="w-full max-w-sm lg:w-[420px] lg:max-w-none lg:flex-shrink-0 lg:h-screen lg:flex lg:items-center lg:justify-center lg:bg-white/5 lg:backdrop-blur lg:border-l lg:border-white/10 lg:px-10 xl:px-16">
+      <div className="w-full max-w-sm lg:w-1/2 lg:max-w-none lg:flex-shrink-0 lg:h-screen lg:flex lg:items-center lg:justify-center lg:bg-white/5 lg:backdrop-blur lg:border-l lg:border-white/10 lg:px-10 xl:px-16">
       <div className="w-full max-w-sm">
 
         {/* Logo */}
