@@ -1,5 +1,7 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 export type MemberSummary = {
   id: string;
   name: string;
@@ -58,6 +60,7 @@ function MetricPill({ label, value, unit, status }: {
 }
 
 export function MemberHealthCard({ member }: { member: MemberSummary }) {
+  const router = useRouter();
   const bmiVal = calcBmi(member.height_cm, member.weight_kg);
   const bmi = bmiVal ? bmiLabel(parseFloat(bmiVal)) : null;
   const rel = RELATION_STYLE[member.relation] || RELATION_STYLE.other;
@@ -76,11 +79,22 @@ export function MemberHealthCard({ member }: { member: MemberSummary }) {
           <p className="font-bold text-gray-900 text-sm leading-tight truncate">{member.name}</p>
           <p className={`text-xs font-semibold capitalize mt-0.5 ${rel.text}`}>{member.relation}</p>
         </div>
-        {member.blood_group && (
-          <span className="ml-auto flex-shrink-0 text-xs font-bold text-gray-600 bg-gray-100 rounded-lg px-2 py-1">
-            {member.blood_group}
-          </span>
-        )}
+        <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+          {member.blood_group && (
+            <span className="text-xs font-bold text-gray-600 bg-gray-100 rounded-lg px-2 py-1">
+              {member.blood_group}
+            </span>
+          )}
+          <button
+            onClick={() => router.push(`/edit-member?id=${member.id}`)}
+            className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center text-gray-400 transition"
+            title="Edit profile">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Divider */}
