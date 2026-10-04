@@ -95,89 +95,80 @@ export default function AuthPage() {
     <div className="min-h-screen bg-gradient-to-br from-brand-700 via-brand-600 to-teal-500 flex items-center justify-center p-4 lg:p-0">
 
       {/* ── Left panel — health data preview (desktop only) ── */}
-      <div className="hidden lg:flex flex-col justify-center w-1/2 h-screen px-12 xl:px-20 gap-6">
+      <div className="hidden lg:flex flex-col justify-center w-1/2 h-screen px-14 xl:px-24 gap-10">
 
-        <div className="mb-2">
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+        {/* Branding */}
+        <div>
+          <div className="flex items-center gap-2.5 mb-6">
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
-            <span className="text-white font-bold text-lg">Family Health</span>
+            <span className="text-white/80 font-semibold text-sm tracking-wide">Family Health</span>
           </div>
-          <h2 className="text-3xl xl:text-4xl font-black text-white leading-tight">
-            All your family's<br />health — in one place
+          <h2 className="text-3xl xl:text-4xl font-black text-white leading-snug">
+            Your family's health,<br />always in your pocket
           </h2>
-          <p className="text-brand-100 mt-3 text-base leading-relaxed max-w-sm">
-            Upload lab reports, track medical values, and keep every family member's health history organised.
+          <p className="text-white/60 mt-4 text-sm leading-relaxed max-w-xs">
+            Upload lab reports, auto-extract medical values, and track every family member's health over time.
           </p>
         </div>
 
-        {/* Demo cards */}
-        <div className="space-y-3 max-w-sm">
-
-          {/* Father card */}
-          <div className="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-blue-400/30 flex items-center justify-center text-base">👨</div>
-              <div>
-                <p className="text-white font-bold text-sm">Achan</p>
-                <p className="text-brand-200 text-xs">Father · Last report 2 days ago</p>
-              </div>
-              <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200">Attention</span>
+        {/* One clean member card */}
+        <div className="bg-white/10 border border-white/15 rounded-3xl p-6 max-w-xs space-y-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-blue-400/25 flex items-center justify-center text-xl">👨</div>
+            <div>
+              <p className="text-white font-bold text-sm">Achan</p>
+              <p className="text-white/50 text-xs">Father · Oct 2026</p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-white/10 rounded-xl px-3 py-2">
-                <p className="text-brand-200 text-[10px] font-semibold uppercase tracking-wide">Blood Sugar</p>
-                <p className="text-white font-black text-lg">148 <span className="text-xs font-normal text-brand-200">mg/dL</span></p>
-                <p className="text-amber-300 text-[10px] font-bold">↑ High</p>
-              </div>
-              <div className="bg-white/10 rounded-xl px-3 py-2">
-                <p className="text-brand-200 text-[10px] font-semibold uppercase tracking-wide">Cholesterol</p>
-                <p className="text-white font-black text-lg">182 <span className="text-xs font-normal text-brand-200">mg/dL</span></p>
-                <p className="text-emerald-300 text-[10px] font-bold">✓ Normal</p>
-              </div>
-            </div>
+            <span className="ml-auto text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-400/20 text-amber-200">Attention</span>
           </div>
 
-          {/* Mother card */}
-          <div className="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-rose-400/30 flex items-center justify-center text-base">👩</div>
-              <div>
-                <p className="text-white font-bold text-sm">Amma</p>
-                <p className="text-brand-200 text-xs">Mother · Last report 1 week ago</p>
-              </div>
-              <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200">Normal</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-white/10 rounded-xl px-3 py-2">
-                <p className="text-brand-200 text-[10px] font-semibold uppercase tracking-wide">Blood Sugar</p>
-                <p className="text-white font-black text-lg">96 <span className="text-xs font-normal text-brand-200">mg/dL</span></p>
-                <p className="text-emerald-300 text-[10px] font-bold">✓ Normal</p>
-              </div>
-              <div className="bg-white/10 rounded-xl px-3 py-2">
-                <p className="text-brand-200 text-[10px] font-semibold uppercase tracking-wide">Haemoglobin</p>
-                <p className="text-white font-black text-lg">12.4 <span className="text-xs font-normal text-brand-200">g/dL</span></p>
-                <p className="text-emerald-300 text-[10px] font-bold">✓ Normal</p>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-white/50 text-xs font-medium">Blood Sugar</p>
+              <div className="flex items-center gap-2">
+                <span className="text-white font-bold text-sm">148 <span className="text-white/40 font-normal text-xs">mg/dL</span></span>
+                <span className="text-[10px] font-bold text-amber-300 bg-amber-400/15 px-2 py-0.5 rounded-full">↑ High</span>
               </div>
             </div>
-          </div>
-
-          {/* Recent record pill */}
-          <div className="flex items-center gap-3 bg-white/10 backdrop-blur border border-white/20 rounded-2xl px-4 py-3">
-            <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center text-sm">🩸</div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-xs font-semibold">CBC Report — Riya</p>
-              <p className="text-brand-200 text-[11px]">3 values extracted · Oct 2026</p>
+            <div className="border-t border-white/10" />
+            <div className="flex items-center justify-between">
+              <p className="text-white/50 text-xs font-medium">Cholesterol</p>
+              <div className="flex items-center gap-2">
+                <span className="text-white font-bold text-sm">182 <span className="text-white/40 font-normal text-xs">mg/dL</span></span>
+                <span className="text-[10px] font-bold text-emerald-300 bg-emerald-400/15 px-2 py-0.5 rounded-full">Normal</span>
+              </div>
             </div>
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+            <div className="border-t border-white/10" />
+            <div className="flex items-center justify-between">
+              <p className="text-white/50 text-xs font-medium">Haemoglobin</p>
+              <div className="flex items-center gap-2">
+                <span className="text-white font-bold text-sm">14.2 <span className="text-white/40 font-normal text-xs">g/dL</span></span>
+                <span className="text-[10px] font-bold text-emerald-300 bg-emerald-400/15 px-2 py-0.5 rounded-full">Normal</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <p className="text-brand-200/60 text-xs">Sample data for illustration · Your real data stays private</p>
+        {/* Feature bullets */}
+        <div className="space-y-3 max-w-xs">
+          {[
+            { icon: '📷', text: 'Photo or PDF — just upload' },
+            { icon: '🔬', text: 'Values auto-extracted instantly' },
+            { icon: '👨‍👩‍👧', text: 'Everyone in the family, one app' },
+          ].map(f => (
+            <div key={f.icon} className="flex items-center gap-3">
+              <span className="text-base">{f.icon}</span>
+              <p className="text-white/60 text-sm">{f.text}</p>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-white/30 text-xs">Sample data for illustration</p>
       </div>
 
       {/* ── Right panel — auth card ── */}
